@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>ito – เว็บแอปปาร์ตี้</title>
+  <style>
+    :root {
+      --bg:#0f172a;          /* slate-900 */
+      --card:#111827;        /* gray-900 */
+      --muted:#94a3b8;       /* slate-400 */
+      --text:#e5e7eb;        /* gray-200 */
+      --accent:#22d3ee;      /* cyan-400 */
+      --accent-2:#a78bfa;    /* violet-400 */
+      --good:#34d399;        /* green-400 */
+      --bad:#fb7185;         /* rose-400 */
+      --shadow: 0 8px 30px rgba(0,0,0,.35);
+      --radius: 20px;
+    }
+    html,body{height:100%;}
+    body{margin:0;background:linear-gradient(160deg,#0b1223,#121a35 50%,#0b1223);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple Color Emoji,Segoe UI Emoji,Helvetica,Arial,sans-serif;}
+
+    .wrap{max-width:900px;margin:0 auto;padding:18px 16px 80px;}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:6px 0 18px;}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:12px;background:radial-gradient(circle at 30% 30%, var(--accent), transparent 40%), radial-gradient(circle at 70% 70%, var(--accent-2), transparent 40%), #0d1b2a; box-shadow:var(--shadow);}
+    h1{font-size:22px;margin:0;letter-spacing:.3px}
+    .sub{color:var(--muted);font-size:13px;margin-top:2px}
+
+    .tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0 18px}
+    .tab{background:#0b1020;border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:10px 14px;text-align:center;color:var(--muted);cursor:pointer;user-select:none}
+    .tab.active{background:linear-gradient(120deg,rgba(34,211,238,.15),rgba(167,139,250,.15));color:var(--text);border-color:rgba(255,255,255,.15)}
+
+    .card{background:rgba(17,24,39,.8);border:1px solid rgba(255,255,255,.06);backdrop-filter: blur(8px); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
+    .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+    .row > *{flex:1}
+
+    button{background:linear-gradient(120deg, rgba(34,211,238,.15), rgba(167,139,250,.15));border:1px solid rgba(255,255,255,.15);color:var(--text);padding:12px 14px;border-radius:14px;cursor:pointer;font-size:16px}
+    button:active{transform:translateY(1px)}
+    .btn-plain{background:transparent;border-color:rgba(255,255,255,.12);}
+    .btn-good{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.4)}
+    .btn-bad{background:rgba(251,113,133,.12);border-color:rgba(251,113,133,.4)}
+
+    input, textarea{width:100%;background:#0b1020;border:1px solid rgba(255,255,255,.1);color:var(--text);padding:12px 14px;border-radius:12px;font-size:16px}
+    label{font-size:13px;color:var(--muted)}
+
+    .topic{font-size:24px;line-height:1.3;margin:6px 0 2px}
+    .hint{font-size:13px;color:var(--muted)}
+
+    .pill{display:inline-flex;align-items:center;gap:8px;background:#0b1020;border:1px solid rgba(255,255,255,.08);padding:8px 12px;border-radius:999px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+
+    /* Players */
+    .players{display:grid;grid-template-columns:repeat(auto-fill, minmax(180px,1fr));gap:12px}
+    .p-card{background:#0b1020;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px}
+    .p-name{font-weight:600}
+    .secret{font-size:40px;font-weight:800;letter-spacing:1px;margin:8px 0}
+    .secret.hidden{filter:blur(9px)}
+
+    /* Drag Sort */
+    .sortable{display:grid;grid-template-columns:1fr;gap:10px;margin-top:8px}
+    .item{background:#0b1020;border:1px dashed rgba(255,255,255,.15);padding:12px;border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .handle{font-size:18px;opacity:.7;cursor:grab}
+
+    .foot{position:fixed;left:0;right:0;bottom:0;padding:10px;background:linear-gradient(180deg, transparent, rgba(0,0,0,.45));}
+    .foot .bar{max-width:900px;margin:0 auto;background:rgba(10,14,30,.9);border:1px solid rgba(255,255,255,.08);border-radius:14px;display:flex;gap:8px;padding:8px;backdrop-filter: blur(6px)}
+    .foot button{flex:1}
+
+    @media (min-width: 740px){
+      .topic{font-size:28px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>ito – เว็บแอปปาร์ตี้</h1>
+          <div class="sub">สุ่มโจทย์ • แจกเลขลับ • จัดลำดับ (โหมดส่งต่อโทรศัพท์)</div>
+        </div>
+      </div>
+      <button class="btn-plain" id="btnReset">รีเซ็ตเกม</button>
+    </header>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="topics">สุ่มโจทย์</div>
+      <div class="tab" data-tab="numbers">เลขลับผู้เล่น</div>
+      <div class="tab" data-tab="order">จัดลำดับ</div>
+    </div>
+
+    <!-- TOPIC CARD -->
+    <section id="tab-topics" class="card">
+      <div class="row" style="align-items:flex-end;gap:10px">
+        <div style="flex:2">
+          <label>โจทย์รอบนี้</label>
+          <div id="topicText" class="topic">—</div>
+          <div class="hint">กดปุ่ม “สุ่มโจทย์” เพื่อเริ่ม</div>
+        </div>
+        <div style="flex:1;min-width:160px">
+          <button id="btnRandomTopic">🎲 สุ่มโจทย์</button>
+        </div>
+      </div>
+
+      <details style="margin-top:12px"><summary class="hint">ดูรายการโจทย์ทั้งหมด (100)</summary>
+        <div id="allTopics" class="chips" style="margin-top:10px"></div>
+      </details>
+    </section>
+
+    <!-- NUMBERS CARD -->
+    <section id="tab-numbers" class="card" style="display:none">
+      <div class="row" style="gap:10px">
+        <div>
+          <label>รายชื่อผู้เล่น (คั่นด้วยจุลภาค , )</label>
+          <input id="namesInput" placeholder="เช่น โอ๊ต, เมย์, โฟกัส, ปิ่น" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="btnSetPlayers" class="btn-good">ตั้งค่าผู้เล่น</button>
+        <button id="btnDeal" class="">แจกเลขลับ 1–100 (ไม่ซ้ำ)</button>
+      </div>
+
+      <div id="players" class="players" style="margin-top:12px"></div>
+      <div class="hint" style="margin-top:8px">* โหมดส่งต่อโทรศัพท์: ให้แต่ละคนกด “ดูเลขของฉัน” เลขจะโชว์ 3 วินาทีแล้วซ่อน</div>
+    </section>
+
+    <!-- ORDER CARD -->
+    <section id="tab-order" class="card" style="display:none">
+      <div class="row">
+        <div style="flex:1">
+          <label>เรียงจาก “น้อย → มาก”</label>
+          <div id="sortable" class="sortable"></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="btnExportOrder" class="btn-plain">คัดลอกลำดับ</button>
+        <button id="btnClearOrder" class="btn-bad">ล้างลำดับ</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="foot">
+    <div class="bar">
+      <button data-tabto="topics">สุ่มโจทย์</button>
+      <button data-tabto="numbers">เลขลับ</button>
+      <button data-tabto="order">จัดลำดับ</button>
+    </div>
+  </div>
+
+<script>
+// --- Topics (100) ---
+const TOPICS = [
+  "ความเผ็ดของอาหาร","ความหวานของขนม","ความขมของกาแฟหรือชา","ราคาของเมนูอาหาร",
+  "ระดับความกรอบของอาหาร","ความเย็นของเครื่องดื่ม","ความมันของอาหาร","ความเปรี้ยวของผลไม้",
+  "ความหรูของร้านอาหาร","ความอิ่มหลังทาน",
+  "ความน่ารักของสัตว์","ขนาดตัวของสัตว์","ความน่ากลัวของสัตว์","ความเร็วในการวิ่ง/บิน",
+  "ความอายุยืนของสัตว์","ความเสียงดังของสัตว์","ความอันตรายของสัตว์มีพิษ","ความหายากของสัตว์",
+  "ความเหม็นของสัตว์","ความซนของสัตว์เลี้ยง",
+  "ความดราม่าในหนัง/ซีรีส์","ความตลกของตัวละคร","ความเท่าของตัวละคร","ความเก่งของตัวร้าย",
+  "ความเศร้าของตอนจบ","ความน่ากลัวของหนังผี","ความยาวของหนัง","ความดังของเพลงประกอบ",
+  "ความกาวของพล็อตเรื่อง","ความเป็นตำนานของเกม",
+  "ระยะทางจากบ้านคุณ","ความร้อนของสถานที่","ความแออัดของสถานที่","ราคาค่าเข้าชม",
+  "ความสวยงามของวิว","ความน่าเบื่อของงาน","ความน่าตื่นเต้นของกิจกรรม","ความเมื่อยหลังทำกิจกรรม",
+  "ความอันตรายของสถานที่","ความสะดวกในการเดินทาง",
+  "ระดับความเหม็นเท้าหลังถอดรองเท้า","ความน่าหงุดหงิดเวลาต่อคิว","ระดับความโกรธของแมว",
+  "ความขี้เกียจของตัวเองวันนี้","ความดังของเสียงปวดท้องร้อง","ความโหดของคุณครูตอนสมัยเรียน",
+  "ความสวยของลายบนถุงขยะ","ความอร่อยของข้าวที่เหลือค้างคืน","ความเร็วในการตอบแชทของเพื่อน",
+  "ความเศร้าตอนเปิดกระเป๋าเจอเงินเหลือ",
+  "ระดับความง่วง","ความหิว","ความปวดหัว","ความตื่นเต้น","ความเครียดจากงาน","ความเมื่อยขา",
+  "ความเย็นของอากาศ","ความร้อนของแดด","ความชื้นในอากาศ","ความหนาวของน้ำ",
+  "ความดังของเสียงดนตรี","ความไพเราะของเพลง","ความติดหูของเพลง","ความเร็วของจังหวะเพลง",
+  "ความดังของเสียงหัวเราะ","ความเงียบของสถานที่","ความหนวกหูของเสียงรบกวน","ความตื่นเต้นของเสียงเอฟเฟกต์",
+  "ความกวนของเสียงแจ้งเตือนมือถือ","ความสบายของเสียงธรรมชาติ",
+  "ความเก่า/ใหม่ของสิ่งของ","น้ำหนักของวัตถุ","ราคาของสิ่งของ","ความเปราะบางของสิ่งของ",
+  "ความสวยงามของเฟอร์นิเจอร์","ความสะดวกในการใช้งาน","ความกว้างของสิ่งของ","ความนิ่มของวัสดุ",
+  "ความทนทาน","ความหายากของของสะสม",
+  "ความสูงของภูเขา","ความลึกของทะเล","ความแรงของลม","ความสวยของพระอาทิตย์ตก",
+  "ความเร็วของกระแสน้ำ","ความสว่างของดวงดาว","ความใหญ่ของเกาะ","ความแรงของแผ่นดินไหว",
+  "ความกว้างของแม่น้ำ","ความสูงของต้นไม้",
+  "ระดับความขี้เก๊กของคน","ความมีกลิ่นปากตอนตื่นนอน","ความเร็วในการกินข้าวของเพื่อน",
+  "ความดราม่าของเพื่อนในกลุ่มแชท","ความเกรี้ยวกราดของบอส","ความขี้ลืมของตัวเอง",
+  "ความน่ากลัวของไฟล์งานหาย","ความกวนของน้องแมว","ความเนียนของการโกหก","ความใจร้ายของเพื่อนที่กินของอร่อยแล้วไม่บอก"
+];
+
+// --- Helpers ---
+const $ = (sel)=>document.querySelector(sel);
+const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function copyText(text){
+  navigator.clipboard?.writeText(text);
+}
+
+// --- Tabs ---
+$$('.tab').forEach(t=>t.addEventListener('click', ()=>switchTab(t.dataset.tab)));
+$$('[data-tabto]').forEach(b=>b.addEventListener('click', ()=>switchTab(b.dataset.tabto)));
+function switchTab(key){
+  $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===key));
+  $('#tab-topics').style.display = key==='topics'? 'block':'none';
+  $('#tab-numbers').style.display = key==='numbers'? 'block':'none';
+  $('#tab-order').style.display = key==='order'? 'block':'none';
+}
+
+// --- Topic logic ---
+const topicText = $('#topicText');
+$('#btnRandomTopic').addEventListener('click', ()=>{
+  const t = TOPICS[Math.floor(Math.random()*TOPICS.length)];
+  topicText.textContent = t;
+});
+
+// render all topics
+const allTopics = $('#allTopics');
+TOPICS.forEach(t=>{
+  const s = document.createElement('span');
+  s.className='pill'; s.textContent=t; allTopics.appendChild(s);
+});
+
+// --- Players & numbers ---
+let PLAYERS = []; // [{name, number, revealed:false}]
+
+$('#btnSetPlayers').addEventListener('click', ()=>{
+  const raw = $('#namesInput').value.trim();
+  const names = raw.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!names.length){ alert('พิมพ์ชื่อผู้เล่นก่อนนะ'); return; }
+  PLAYERS = names.map(n=>({name:n, number:null, revealed:false}));
+  renderPlayers();
+  renderOrderList();
+});
+
+$('#btnDeal').addEventListener('click', ()=>{
+  if(!PLAYERS.length){ alert('ตั้งค่าผู้เล่นก่อน'); return; }
+  const deck = shuffle(Array.from({length:100}, (_,i)=>i+1));
+  PLAYERS.forEach((p,i)=>{ p.number = deck[i]; p.revealed=false; });
+  renderPlayers();
+});
+
+function renderPlayers(){
+  const box = $('#players');
+  box.innerHTML='';
+  PLAYERS.forEach((p,idx)=>{
+    const el = document.createElement('div');
+    el.className = 'p-card';
+    el.innerHTML = `
+      <div class="p-name">${p.name}</div>
+      <div class="secret ${p.revealed? '':'hidden'}" id="sec-${idx}">${p.number ?? '—'}</div>
+      <div class="row" style="gap:8px">
+        <button data-reveal="${idx}">ดูเลขของฉัน (3 วิ)</button>
+        <button class="btn-plain" data-hide="${idx}">ซ่อน</button>
+      </div>
+    `;
+    box.appendChild(el);
+  });
+
+  // bind
+  $$('#players [data-reveal]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const i = +btn.dataset.reveal;
+    if(PLAYERS[i].number==null){ alert('กด "แจกเลขลับ" ก่อน'); return; }
+    PLAYERS[i].revealed = true;
+    const s = $(`#sec-${i}`); s.classList.remove('hidden');
+    setTimeout(()=>{ s.classList.add('hidden'); PLAYERS[i].revealed=false; }, 3000);
+  }));
+  $$('#players [data-hide]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const i = +btn.dataset.hide; $(`#sec-${i}`).classList.add('hidden'); PLAYERS[i].revealed=false;
+  }));
+}
+
+// --- Order / drag sort ---
+const sortable = $('#sortable');
+function renderOrderList(){
+  sortable.innerHTML = '';
+  PLAYERS.forEach((p,i)=>{
+    const it = document.createElement('div');
+    it.className = 'item';
+    it.setAttribute('draggable','true');
+    it.dataset.idx = i;
+    it.innerHTML = `<span>${p.name}</span><span class="handle">☰</span>`;
+    sortable.appendChild(it);
+  });
+  bindDrag();
+}
+
+function bindDrag(){
+  const items = $$('#sortable .item');
+  let dragEl=null;
+  items.forEach(it=>{
+    it.addEventListener('dragstart', e=>{ dragEl=it; it.style.opacity=.6; });
+    it.addEventListener('dragend', e=>{ it.style.opacity=1; });
+    it.addEventListener('dragover', e=>{ e.preventDefault(); const cur=it; if(!dragEl||cur===dragEl)return; const rect=cur.getBoundingClientRect(); const before=(e.clientY-rect.top)<rect.height/2; cur.parentNode.insertBefore(dragEl, before?cur:cur.nextSibling); });
+  });
+}
+
+$('#btnExportOrder').addEventListener('click', ()=>{
+  const names = $$('#sortable .item').map(it=>it.querySelector('span').textContent);
+  const text = 'ลำดับ (น้อย→มาก): ' + names.join(' → ');
+  copyText(text);
+  alert('คัดลอกแล้ว\n\n'+text);
+});
+
+$('#btnClearOrder').addEventListener('click', ()=>{ renderOrderList(); });
+
+// --- Reset ---
+$('#btnReset').addEventListener('click', ()=>{
+  if(!confirm('เริ่มเกมใหม่ทั้งหมด?')) return;
+  $('#topicText').textContent='—';
+  $('#namesInput').value='';
+  PLAYERS=[]; renderPlayers(); renderOrderList();
+  switchTab('topics');
+});
+
+// Default: show a random topic once
+$('#btnRandomTopic').click();
+</script>
+</body>
+</html>
