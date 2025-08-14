@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>ito – เว็บแอปปาร์ตี้</title>
+  <title>ito – ฉบับทำเองขำ ๆ </title>
   <style>
     :root {
       --bg:#0f172a;          /* slate-900 */
@@ -55,7 +55,7 @@
     .p-card{background:#0b1020;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px}
     .p-name{font-weight:600}
     .secret{font-size:40px;font-weight:800;letter-spacing:1px;margin:8px 0}
-    .secret.hidden{filter:blur(9px)}
+    .secret.hidden{filter:blur(20px); color: #0D1326; opacity: 1;}
 
     /* Drag Sort */
     .sortable{display:grid;grid-template-columns:1fr;gap:10px;margin-top:8px}
@@ -69,6 +69,42 @@
     @media (min-width: 740px){
       .topic{font-size:28px}
     }
+/* --- สไตล์สำหรับปุ่มเฉลยในหน้าจัดลำดับ --- */
+.item {
+  justify-content: space-between; /* ปรับการจัดเรียงของเดิมเล็กน้อย */
+}
+.order-name {
+  flex-grow: 1; /* ทำให้ชื่อผู้เล่นยืดเต็มพื้นที่ว่าง */
+}
+.order-number {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--good); /* ใช้สีเขียวสำหรับคำตอบที่ถูกต้อง */
+  min-width: 30px;
+  text-align: right;
+  margin: 0 10px;
+}
+.order-number.hidden {
+  display: none; /* ซ่อนตัวเลขไว้ตอนแรก */
+}
+.order-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* ระยะห่างระหว่างปุ่มเฉลยกับตัวลาก */
+}
+.btn-reveal {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.2);
+  color: var(--muted);
+  padding: 5px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.btn-reveal:hover {
+  background: rgba(255,255,255,.1);
+}
   </style>
 </head>
 <body>
@@ -77,7 +113,7 @@
       <div class="brand">
         <div class="logo" aria-hidden="true"></div>
         <div>
-          <h1>ito – เว็บแอปปาร์ตี้</h1>
+          <h1>ito – ฉบับทำเองขำ ๆ </h1>
           <div class="sub">สุ่มโจทย์ • แจกเลขลับ • จัดลำดับ (โหมดส่งต่อโทรศัพท์)</div>
         </div>
       </div>
@@ -282,19 +318,86 @@ function renderOrderList(){
     it.className = 'item';
     it.setAttribute('draggable','true');
     it.dataset.idx = i;
-    it.innerHTML = `<span>${p.name}</span><span class="handle">☰</span>`;
+    // ปรับแก้ HTML ที่สร้างขึ้นใหม่ตรงนี้
+    it.innerHTML = `
+      <span class="order-name">${p.name}</span>
+      <span class="order-number hidden">${p.number ?? '?'}</span>
+      <div class="order-actions">
+        <button class="btn-reveal">เฉลย</button>
+        <span class="handle">☰</span>
+      </div>
+    `;
     sortable.appendChild(it);
   });
+
+  // เพิ่มโค้ดสำหรับดักจับการคลิกปุ่ม "เฉลย"
+  $$('#sortable .btn-reveal').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      // หาตัวเลขที่ซ่อนอยู่ในแถวเดียวกัน
+      const itemDiv = e.target.closest('.item');
+      const numberSpan = itemDiv.querySelector('.order-number');
+      
+      // แสดงตัวเลขและซ่อนปุ่มเฉลย
+      if (numberSpan) {
+        numberSpan.classList.remove('hidden');
+      }
+      e.target.style.display = 'none';
+    });
+  });
+  
   bindDrag();
 }
 
 function bindDrag(){
   const items = $$('#sortable .item');
-  let dragEl=null;
-  items.forEach(it=>{
-    it.addEventListener('dragstart', e=>{ dragEl=it; it.style.opacity=.6; });
-    it.addEventListener('dragend', e=>{ it.style.opacity=1; });
-    it.addEventListener('dragover', e=>{ e.preventDefault(); const cur=it; if(!dragEl||cur===dragEl)return; const rect=cur.getBoundingClientRect(); const before=(e.clientY-rect.top)<rect.height/2; cur.parentNode.insertBefore(dragEl, before?cur:cur.nextSibling); });
+  let dragEl = null;
+
+  items.forEach(it => {
+    // === โค้ดสำหรับเมาส์ (ของเดิม) ===
+    it.addEventListener('dragstart', e => {
+      dragEl = it;
+      it.style.opacity = '.6';
+    });
+    it.addEventListener('dragend', e => {
+      if (!dragEl) return;
+      dragEl.style.opacity = '1';
+      dragEl = null;
+    });
+    it.addEventListener('dragover', e => {
+      e.preventDefault();
+      const cur = it;
+      if (!dragEl || cur === dragEl) return;
+      const rect = cur.getBoundingClientRect();
+      const before = (e.clientY - rect.top) < rect.height / 2;
+      cur.parentNode.insertBefore(dragEl, before ? cur : cur.nextSibling);
+    });
+
+    // === โค้ดสำหรับสัมผัส (ที่เพิ่มเข้ามา) ===
+    it.addEventListener('touchstart', e => {
+      dragEl = it;
+      it.style.opacity = '.6';
+    }, { passive: false });
+
+    it.addEventListener('touchend', e => {
+      if (!dragEl) return;
+      dragEl.style.opacity = '1';
+      dragEl = null;
+    });
+
+    it.addEventListener('touchmove', e => {
+      e.preventDefault(); // คำสั่งสำคัญ: ป้องกันไม่ให้หน้าจอเลื่อนตามนิ้ว
+      if (!dragEl) return;
+
+      const touchLocation = e.targetTouches[0];
+      const elementOver = document.elementFromPoint(touchLocation.clientX, touchLocation.clientY);
+      const cur = elementOver ? elementOver.closest('.item') : null;
+
+      if (!cur || cur === dragEl) return;
+      
+      const rect = cur.getBoundingClientRect();
+      const before = (touchLocation.clientY - rect.top) < rect.height / 2;
+      cur.parentNode.insertBefore(dragEl, before ? cur : cur.nextSibling);
+    }, { passive: false });
   });
 }
 
